@@ -71,7 +71,7 @@ This repository contains a `.repos` file that helps you clone the required depen
    ```
 3. **Clone the Repositories:**
    ```bash
-    git clone https://github.com/frankarobotics/franka_ros2.git src
+    git clone https://github.com/sunflower050105/franka_ros2.git -b jazzy src
     ```
 4. **Install the dependencies**
     ```bash

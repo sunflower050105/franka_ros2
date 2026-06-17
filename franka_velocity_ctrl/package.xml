@@ -1,0 +1,37 @@
+<?xml version="1.0"?>
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
+  <name>franka_velocity_ctrl</name>
+  <version>0.1.0</version>
+  <description>
+    Joint velocity control package for the Franka Research 3 (FR3) real hardware.
+    Provides a velocity command node (demo / topic / zero modes) and an interactive
+    keyboard teleoperation node, together with launch files that bring up the
+    ros2_control stack with a JointGroupVelocityController.
+  </description>
+  <maintainer email="your@email.com">Your Name</maintainer>
+  <license>Apache-2.0</license>
+
+  <!-- runtime deps -->
+  <depend>rclpy</depend>
+  <depend>std_msgs</depend>
+  <depend>controller_manager</depend>
+  <depend>velocity_controllers</depend>
+  <depend>joint_state_broadcaster</depend>
+  <depend>franka_bringup</depend>
+  <depend>franka_description</depend>
+  <depend>franka_hardware</depend>
+  <depend>franka_robot_state_broadcaster</depend>
+
+  <exec_depend>ros2launch</exec_depend>
+  <exec_depend>python3-numpy</exec_depend>
+
+  <test_depend>ament_copyright</test_depend>
+  <test_depend>ament_flake8</test_depend>
+  <test_depend>ament_pep257</test_depend>
+  <test_depend>python3-pytest</test_depend>
+
+  <export>
+    <build_type>ament_python</build_type>
+  </export>
+</package>
