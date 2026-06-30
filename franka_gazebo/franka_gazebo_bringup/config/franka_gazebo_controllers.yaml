@@ -38,13 +38,10 @@ controller_manager:
     full_body_controller:
       type: mobile_fr3_duo_trajectory_controller/MobileFR3DuoTrajectoryController
 
-<<<<<<< HEAD:franka_gazebo/franka_gazebo_bringup/config/franka_gazebo_controllers.yaml
     spine_joint_trajectory_controller:
       type: joint_trajectory_controller/JointTrajectoryController
-=======
     joint_velocity_controller:
       type: velocity_controllers/JointGroupVelocityController
->>>>>>> 4aaac9d (Add joint velocity controller):franka_gazebo_bringup/config/franka_gazebo_controllers.yaml
 
 joint_position_example_controller:
   ros__parameters:
@@ -205,7 +202,6 @@ full_body_controller:
       - 1.0
       - 0.5
 
-<<<<<<< HEAD:franka_gazebo/franka_gazebo_bringup/config/franka_gazebo_controllers.yaml
 cartesian_impedance_example_controller:
   ros__parameters:
     arm_id: fr3
@@ -227,7 +223,6 @@ spine_joint_trajectory_controller:
     state_interfaces:
       - position
       - velocity
-=======
 joint_velocity_controller:
   ros__parameters:
     joints:
@@ -238,4 +233,3 @@ joint_velocity_controller:
       - fr3_joint5
       - fr3_joint6
       - fr3_joint7
->>>>>>> 4aaac9d (Add joint velocity controller):franka_gazebo_bringup/config/franka_gazebo_controllers.yaml

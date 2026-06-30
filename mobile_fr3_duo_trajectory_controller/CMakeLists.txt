@@ -65,13 +65,12 @@ ament_target_dependencies(
 pluginlib_export_plugin_description_file(controller_interface ${PROJECT_NAME}.xml)
 
 install(
-<<<<<<< HEAD
         TARGETS
         ${PROJECT_NAME}
-=======
+
         TARGETS ${PROJECT_NAME}
         EXPORT export_${PROJECT_NAME}
->>>>>>> 43edfd4 (Repo cloning and packages building debugging)
+
         RUNTIME DESTINATION bin
         ARCHIVE DESTINATION lib
         LIBRARY DESTINATION lib
