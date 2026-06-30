@@ -33,21 +33,21 @@ It provides two nodes:
 
 | Requirement | Version |
 |---|---|
-| Ubuntu | 22.04 LTS (Jammy) |
-| ROS 2 | Humble Hawksbill |
+| Ubuntu | 24.04 LTS (Noble) |
+| ROS 2 | Jazzy |
 | `franka_ros2` | ≥ 0.1.15 (this workspace) |
-| `ros2_control` / `velocity_controllers` | Humble |
+| `ros2_control` / `velocity_controllers` | Jazzy |
 | Python | 3.10+ |
 
 Install ROS 2 controllers if not already present:
 
 ```bash
 sudo apt update
-sudo apt install ros-humble-ros2-control \
-                 ros-humble-ros2-controllers \
-                 ros-humble-velocity-controllers \
-                 ros-humble-joint-state-broadcaster \
-                 ros-humble-controller-manager \
+sudo apt install ros-jazzy-ros2-control \
+                 ros-jazzy-ros2-controllers \
+                 ros-jazzy-velocity-controllers \
+                 ros-jazzy-joint-state-broadcaster \
+                 ros-jazzy-controller-manager \
                  xterm       # required for keyboard teleop in launch
 ```
 
@@ -135,7 +135,7 @@ sudo usermod -aG realtime $USER
 
 ```bash
 # 1. Source ROS 2 base
-source /opt/ros/humble/setup.bash
+source /opt/ros/jazzy/setup.bash
 
 # 2. Install rosdep dependencies (run once from workspace root)
 cd ~/franka_ros2_ws
