@@ -18,6 +18,8 @@
     <xacro:include filename="$(find franka_hardware)/ros2_control/franka_arm.ros2_control.xacro"/>
     <!-- Gazebo extras -->
     <xacro:include filename="$(find franka_gazebo_bringup)/urdf/sensors.xacro"/>
+    <!-- Dual cameras for the FR3 arm -->
+    <xacro:include filename="$(find franka_gazebo_bringup)/urdf/fr3_arm_cameras.xacro"/>
 
     <!-- ================================================================ -->
     <!-- Arguments                                                        -->
@@ -26,6 +28,22 @@
     <xacro:arg name="hand" default="true"/>
     <xacro:arg name="ee_id" default="franka_hand"/>
     <xacro:arg name="gazebo_effort" default="false"/>
+
+    <!-- ================================================================ -->
+    <!-- Camera arguments (focal lengths in mm; sensor width in mm)       -->
+    <!-- Change these on the command-line or in the launch file mappings  -->
+    <!--   cam1 = wrist camera  (link8 / flange)                          -->
+    <!--   cam2 = elbow camera  (link4)                                   -->
+    <!-- ================================================================ -->
+    <xacro:arg name="cam1_focal_length"  default="3.5"/>
+    <xacro:arg name="cam2_focal_length"  default="8.0"/>
+    <xacro:arg name="cam1_sensor_width"  default="3.68"/>
+    <xacro:arg name="cam2_sensor_width"  default="3.68"/>
+    <xacro:arg name="cam_width"          default="640"/>
+    <xacro:arg name="cam_height"         default="480"/>
+    <xacro:arg name="cam_rate"           default="30"/>
+    <xacro:arg name="cam_clip_near"      default="0.05"/>
+    <xacro:arg name="cam_clip_far"       default="20.0"/>
 
     <!-- Compute prefix (same logic as fr3.urdf.xacro) -->
     <xacro:property name="prefix" value="$(arg arm_prefix)"/>
@@ -49,5 +67,23 @@
     <xacro:franka_gazebo_arm_imus arm_prefix="$(arg arm_prefix)" robot_type="$(arg robot_type)" imu_side="top"/>
     <xacro:franka_gazebo_arm_imus arm_prefix="$(arg arm_prefix)" robot_type="$(arg robot_type)" imu_side="bottom"/>
 
+    <!-- ================================================================ -->
+    <!-- Dual cameras                                                      -->
+    <!--   cam1 = wrist camera  mounted on link8 (flange)                 -->
+    <!--   cam2 = elbow camera  mounted on link4                          -->
+    <!-- Focal lengths and all camera parameters are passed from args.    -->
+    <!-- ================================================================ -->
+    <xacro:franka_arm_dual_cameras
+        arm_prefix="$(arg arm_prefix)"
+        robot_type="$(arg robot_type)"
+        cam1_focal_length="$(arg cam1_focal_length)"
+        cam2_focal_length="$(arg cam2_focal_length)"
+        cam1_sensor_width="$(arg cam1_sensor_width)"
+        cam2_sensor_width="$(arg cam2_sensor_width)"
+        cam_width="$(arg cam_width)"
+        cam_height="$(arg cam_height)"
+        cam_rate="$(arg cam_rate)"
+        clip_near="$(arg cam_clip_near)"
+        clip_far="$(arg cam_clip_far)"/>
 
 </robot>

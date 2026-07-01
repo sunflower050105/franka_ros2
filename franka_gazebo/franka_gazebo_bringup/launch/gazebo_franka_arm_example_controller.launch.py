@@ -52,7 +52,11 @@ def load_controller(context: LaunchContext, controller_name):
     )]
 
 
-def get_robot_description(context: LaunchContext, robot_type, load_gripper, franka_hand):
+def get_robot_description(context: LaunchContext, robot_type, load_gripper, franka_hand,
+                          cam1_focal_length=None, cam2_focal_length=None,
+                          cam1_sensor_width=None, cam2_sensor_width=None,
+                          cam_width=None, cam_height=None, cam_rate=None,
+                          cam_clip_near=None, cam_clip_far=None):
     robot_type_str = context.perform_substitution(robot_type)
     load_gripper_str = context.perform_substitution(load_gripper)
     franka_hand_str = context.perform_substitution(franka_hand)
@@ -63,15 +67,32 @@ def get_robot_description(context: LaunchContext, robot_type, load_gripper, fran
         'franka_arm.gazebo.xacro'
     )
 
+    mappings = {
+        'robot_type': robot_type_str,
+        'hand': load_gripper_str,
+        'gazebo': 'true',
+        'ee_id': franka_hand_str,
+        'gazebo_effort': 'true',
+    }
+
+    # Forward optional camera parameters when provided
+    def _add(key, lc_sub):
+        if lc_sub is not None:
+            mappings[key] = context.perform_substitution(lc_sub)
+
+    _add('cam1_focal_length', cam1_focal_length)
+    _add('cam2_focal_length', cam2_focal_length)
+    _add('cam1_sensor_width', cam1_sensor_width)
+    _add('cam2_sensor_width', cam2_sensor_width)
+    _add('cam_width',         cam_width)
+    _add('cam_height',        cam_height)
+    _add('cam_rate',          cam_rate)
+    _add('cam_clip_near',     cam_clip_near)
+    _add('cam_clip_far',      cam_clip_far)
+
     robot_description_config = xacro.process_file(
         franka_xacro_file,
-        mappings={
-            'robot_type': robot_type_str,
-            'hand': load_gripper_str,
-            'gazebo': 'true',
-            'ee_id': franka_hand_str,
-            'gazebo_effort': 'true',
-        }
+        mappings=mappings
     )
 
     if not isinstance(robot_description_config, xml.dom.minidom.Document):
@@ -111,6 +132,17 @@ def generate_launch_description():
     rviz = LaunchConfiguration(rviz_name)
     gz_args = LaunchConfiguration(gz_args_name)
 
+    # Camera LaunchConfigurations
+    cam1_focal_length = LaunchConfiguration('cam1_focal_length')
+    cam2_focal_length = LaunchConfiguration('cam2_focal_length')
+    cam1_sensor_width = LaunchConfiguration('cam1_sensor_width')
+    cam2_sensor_width = LaunchConfiguration('cam2_sensor_width')
+    cam_width         = LaunchConfiguration('cam_width')
+    cam_height        = LaunchConfiguration('cam_height')
+    cam_rate          = LaunchConfiguration('cam_rate')
+    cam_clip_near     = LaunchConfiguration('cam_clip_near')
+    cam_clip_far      = LaunchConfiguration('cam_clip_far')
+
     load_gripper_launch_argument = DeclareLaunchArgument(
         load_gripper_name,
         default_value='false',
@@ -140,10 +172,43 @@ def generate_launch_description():
         default_value='true',
         description='true/false for visualizing the robot in rviz')
 
-    # Get robot description
+    # Camera arguments (declared here so IncludeLaunchDescription can forward them)
+    cam1_fl_arg = DeclareLaunchArgument(
+        'cam1_focal_length', default_value='3.5',
+        description='Camera-1 (wrist) focal length in mm')
+    cam2_fl_arg = DeclareLaunchArgument(
+        'cam2_focal_length', default_value='8.0',
+        description='Camera-2 (elbow) focal length in mm')
+    cam1_sw_arg = DeclareLaunchArgument(
+        'cam1_sensor_width', default_value='3.68',
+        description='Camera-1 sensor width in mm (1/4" CMOS = 3.68 mm)')
+    cam2_sw_arg = DeclareLaunchArgument(
+        'cam2_sensor_width', default_value='3.68',
+        description='Camera-2 sensor width in mm (1/4" CMOS = 3.68 mm)')
+    cam_width_arg = DeclareLaunchArgument(
+        'cam_width', default_value='640',
+        description='Camera image width in pixels')
+    cam_height_arg = DeclareLaunchArgument(
+        'cam_height', default_value='480',
+        description='Camera image height in pixels')
+    cam_rate_arg = DeclareLaunchArgument(
+        'cam_rate', default_value='30',
+        description='Camera frame rate in Hz')
+    cam_clip_near_arg = DeclareLaunchArgument(
+        'cam_clip_near', default_value='0.05',
+        description='Near clipping plane in metres')
+    cam_clip_far_arg = DeclareLaunchArgument(
+        'cam_clip_far', default_value='20.0',
+        description='Far clipping plane in metres')
+
+    # Get robot description  (camera args forwarded to xacro)
     robot_state_publisher = OpaqueFunction(
         function=get_robot_description,
-        args=[robot_type, load_gripper, franka_hand])
+        args=[robot_type, load_gripper, franka_hand,
+              cam1_focal_length, cam2_focal_length,
+              cam1_sensor_width, cam2_sensor_width,
+              cam_width, cam_height, cam_rate,
+              cam_clip_near, cam_clip_far])
 
     # Gazebo Sim
     os.environ['GZ_SIM_RESOURCE_PATH'] = os.path.dirname(
@@ -189,6 +254,7 @@ def generate_launch_description():
     )
 
     return LaunchDescription([
+        # Standard arguments
         load_gripper_launch_argument,
         franka_hand_launch_argument,
         robot_type_launch_argument,
@@ -196,6 +262,17 @@ def generate_launch_description():
         controller_launch_argument,
         gz_args_launch_argument,
         rviz_launch_argument,
+        # Camera arguments
+        cam1_fl_arg,
+        cam2_fl_arg,
+        cam1_sw_arg,
+        cam2_sw_arg,
+        cam_width_arg,
+        cam_height_arg,
+        cam_rate_arg,
+        cam_clip_near_arg,
+        cam_clip_far_arg,
+        # Launch items
         gazebo_empty_world,
         robot_state_publisher,
         rviz_node,
