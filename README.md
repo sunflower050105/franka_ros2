@@ -77,98 +77,31 @@ This repository contains a `.repos` file that helps you clone the required depen
     ```bash
     vcs import src < src/dependency.repos --recursive --skip-existing
     ```
-5. **Detect and install project dependencies**
+5. **Recursive common submodule of libfranka**
+    ```bash
+    cd ~/franka_ros2_ws/src/libfranka
+    git submodule update --init --recursive
+    ```
+
+6. **Detect and install project dependencies**
    ```bash
    rosdep install --from-paths src --ignore-src --rosdistro jazzy -y --skip-keys=zed_wrapper
    ```
-6. **Build**
+7. **Build**
    ```bash
    # use the --symlinks option to reduce disk usage, and facilitate development.
    colcon build --symlink-install --cmake-args -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTS=OFF
    ```
-7. **Adjust Enviroment**
+8. **Adjust Enviroment**
    ```bash
    # Adjust environment to recognize packages and dependencies in your newly built ROS 2 workspace.
    source install/setup.sh
    ```
+9. **Configure real-time kernel**
 
-## Docker Container Installation
-The **franka_ros2** package includes a `Dockerfile` and a `docker-compose.yml`, which allows you to use `franka_ros2` packages without manually installing **ROS 2**. Also, the support for Dev Containers in Visual Studio Code is provided.
-
-For detailed instructions, on preparing VSCode to use the `.devcontainer` follow the setup guide from [VSCode devcontainer_setup](https://code.visualstudio.com/docs/devcontainers/tutorial).
-
-1. **Clone the Repositories:**
-    ```bash
-    git clone https://github.com/frankarobotics/franka_ros2.git
-    cd franka_ros2
-    ```
-    We provide separate instructions for using Docker with Visual Studio Code or the command line. Choose one of the following options:
-
-    Option A: Set up and use Docker from the command line (without Visual Studio Code).
-
-    Option B: Set up and use Docker with Visual Studio Code's Docker support.
-
-### Option A: using Docker Compose
-
-  2. **Save the current user id into a file:**
-      ```bash
-      echo -e "USER_UID=$(id -u $USER)\nUSER_GID=$(id -g $USER)" > .env
-      ```
-      It is needed to mount the folder from inside the Docker container.
-
-  3. **Build the container:**
-      ```bash
-      docker compose build
-      ```
-  4. **Run the container:**
-      ```bash
-      docker compose up -d
-      ```
-  5. **Open a shell inside the container:**
-      ```bash
-      docker exec -it franka_ros2 /bin/bash
-      ```
-  6. **Clone the latests dependencies:**
-      ```bash
-      vcs import src < src/dependency.repos --recursive --skip-existing
-      ```
-  7. **Build the workspace:**
-      ```bash
-      colcon build --symlink-install --cmake-args -DCMAKE_BUILD_TYPE=Release
-      ```
-  7. **Source the built workspace:**
-      ```bash
-      source install/setup.bash
-      ```
-  8. **When you are done, you can exit the shell and delete the container**:
-      ```bash
-      docker compose down -t 0
-      ```
-
-### Option B: using Dev Containers in Visual Studio Code
-
-  2. **Open Visual Studio Code ...**
-
-        Then, open folder  `franka_ros2`
-
-  3. **Choose `Reopen in container` when prompted.**
-
-      The container will be built automatically, as required.
-
-  4. **Clone the latests dependencies:**
-      ```bash
-      vcs import src < src/dependency.repos --recursive --skip-existing
-      ```
-
-  5. **Open a terminal and build the workspace:**
-      ```bash
-      colcon build --symlink-install --cmake-args -DCMAKE_BUILD_TYPE=Release
-      ```
-  6. **Source the built workspace environment:**
-      ```bash
-      source install/setup.bash
-      ```
-
+    Please follow the instruction: [Setting up the Real-Time Kernel](https://frankarobotics.github.io/docs/doc/libfranka/docs/real_time_kernel.html)
+    
+    Ubuntu Pro is preferred.
 
 # Test the build
    ```bash
@@ -258,6 +191,18 @@ ros2 run teleop_twist_keyboard teleop_twist_keyboard --ros-args -p stamped:=true
 ### Run Gazebo examples with ROS 2
 
 If you want to use Gazebo to run your code, you can find some examples here: [franka_gazebo_bringup](./franka_gazebo/franka_gazebo_bringup/doc/index)
+
+# Lab Dev
+
+## Run Franka velocity control
+
+Please refer in the [Franka_velocity_ctrl package's Readme.md](https://github.com/sunflower050105/franka_ros2/blob/jazzy/franka_velocity_ctrl/README.md)
+
+
+## Run Franka velocity control in Gazebo
+
+Please refer in the [Franka_gazebo_velocity_ctrl package's Readme.md](https://github.com/sunflower050105/franka_ros2/blob/jazzy/franka_gazebo_velocity_ctrl/README.md)
+
 
 ## Troubleshooting
 ### `libfranka: UDP receive: Timeout error`
