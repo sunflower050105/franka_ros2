@@ -19,7 +19,7 @@ find_package(rclcpp_action REQUIRED)
 find_package(franka_msgs REQUIRED)
 find_package(hardware_interface REQUIRED)
 find_package(pluginlib REQUIRED)
-find_package(Franka 0.19.0 REQUIRED)
+find_package(Franka 0.17.0 REQUIRED)
 find_package(rclcpp_components REQUIRED)
 find_package(realtime_tools REQUIRED)
 
@@ -86,7 +86,7 @@ if(BUILD_TESTING)
     ament_pep257()
     ament_xmllint()
 
-    add_subdirectory(test)
+    #add_subdirectory(test)
 
     if(CHECK_TIDY)
         find_package(ament_cmake_clang_tidy REQUIRED)

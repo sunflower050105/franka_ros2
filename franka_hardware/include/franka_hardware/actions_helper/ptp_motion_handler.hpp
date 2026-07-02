@@ -12,83 +12,61 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+// NOTE: This file is a compatibility stub for libfranka < 0.18.0.
+// AsyncPositionControlHandler is not available in libfranka 0.17.x (server protocol v9).
+// PTP motion is therefore not supported with this libfranka version.
+
 #pragma once
 
-#include <future>
-#include <map>
 #include <memory>
+#include <optional>
+#include <string>
 
-#include <franka/async_control/async_position_control_handler.hpp>
 #include <franka_hardware/robot.hpp>
 #include <franka_msgs/action/ptp_motion.hpp>
 
 namespace franka_hardware {
 
 /**
- * Handler for point-to-point motions using asynchronous position control.
+ * Stub PTPMotionHandler for libfranka 0.17.x (no AsyncPositionControlHandler available).
  */
 class PTPMotionHandler {
  public:
-  // This structure holds the result after starting a new PTP motion.
+  // Minimal TargetStatus enum mirroring what franka::TargetStatus provides in >=0.18
+  enum class TargetStatus {
+    kIdle,
+    kExecuting,
+    kTargetReached,
+    kAborted,
+  };
+
+  struct TargetFeedback {
+    TargetStatus status{TargetStatus::kAborted};
+    std::optional<std::string> error_message{"PTPMotion not supported with libfranka 0.17.x"};
+  };
+
   struct CommandResult {
     std::string motion_id;
     std::shared_ptr<franka_msgs::action::PTPMotion::Result> result;
   };
 
-  /**
-   * Constructs a new PTPMotionHandler with storing the franka hardware robot backend.
-   *
-   * @param robot the franka hardware robot backend
-   */
-  PTPMotionHandler(const std::shared_ptr<Robot>& robot);
-  virtual ~PTPMotionHandler();
+  explicit PTPMotionHandler(const std::shared_ptr<Robot>& /*robot*/) {}
+  virtual ~PTPMotionHandler() = default;
 
-  /**
-   * Starts a new point-to-point motion to the specified joint configuration.
-   *
-   * @param robot the (libfranka) robot backend
-   * @param goal the goal containing the target joint configuration and motion parameters
-   * @return CommandResult contains the result of the commanded point-to-point motion
-   */
-  auto startNewPTPMotion(const std::shared_ptr<franka::Robot>& robot,
-                         const std::shared_ptr<const franka_msgs::action::PTPMotion::Goal>& goal)
-      -> CommandResult;
+  auto startNewPTPMotion(const std::shared_ptr<franka::Robot>& /*robot*/,
+                         const std::shared_ptr<const franka_msgs::action::PTPMotion::Goal>& /*goal*/)
+      -> CommandResult {
+    auto result = std::make_shared<franka_msgs::action::PTPMotion::Result>();
+    result->target_status.status = franka_msgs::msg::TargetStatus::ABORTED;
+    result->error_message = "PTPMotion is not supported with libfranka 0.17.x (server protocol v9)";
+    return CommandResult{"", result};
+  }
 
-  /**
-   * Retrieves feedback for the specified motion ID.
-   *
-   * @param motion_id the ID of the motion to get feedback for
-   * @return TargetFeedback containing the current feedback of the motion
-   */
-  auto getFeedback(const std::string& motion_id)
-      -> franka::AsyncPositionControlHandler::TargetFeedback;
+  auto getFeedback(const std::string& /*motion_id*/) -> TargetFeedback {
+    return TargetFeedback{};
+  }
 
-  /**
-   * Cancels the currently running motion.
-   */
-  auto cancelMotion() -> void;
-
- private:
-  std::shared_ptr<Robot> franka_hardware_robot_;
-
-  std::shared_ptr<franka::AsyncPositionControlHandler> position_control_handler_;
-  size_t motion_id_ = 0;
-  std::atomic<bool> running_ = true;
-  std::map<std::string, std::future<franka::AsyncPositionControlHandler::TargetFeedback>>
-      feedback_futures_;
-
-  std::mutex control_mutex_;
-  franka::AsyncPositionControlHandler::TargetFeedback last_feedback_;
-
-  /**
-   * Executes the point-to-point motion to the specified joint configuration.
-   *
-   * @param goal_joint_configuration the target joint configuration for the motion
-   * @return tuple containing the motion ID and optional TargetFeedback
-   */
-  auto executeMotion(const std::vector<double>& goal_joint_configuration)
-      -> std::tuple<std::string,
-                    std::optional<franka::AsyncPositionControlHandler::TargetFeedback>>;
+  auto cancelMotion() -> void {}
 };
 
 }  // namespace franka_hardware
