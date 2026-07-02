@@ -89,7 +89,7 @@ auto ActionServer::ptpMotionAction(
       rclcpp::sleep_for(std::chrono::milliseconds(1));
       auto feedback = ptp_motion_handler_.getFeedback(current_motion);
       switch (feedback.status) {
-        case franka::TargetStatus::kAborted:
+        case PTPMotionHandler::TargetStatus::kAborted:
           RCLCPP_ERROR(this->get_logger(), "PTP motion aborted: %s",
                        feedback.error_message.value_or("unknown reason").c_str());
           command_result.result->target_status.status = franka_msgs::msg::TargetStatus::ABORTED;
@@ -97,13 +97,13 @@ auto ActionServer::ptpMotionAction(
               feedback.error_message.value_or("PTP motion aborted");
           goal_handle->abort(command_result.result);
           return;
-        case franka::TargetStatus::kIdle:
-        case franka::TargetStatus::kExecuting: {
+        case PTPMotionHandler::TargetStatus::kIdle:
+        case PTPMotionHandler::TargetStatus::kExecuting: {
           feedback_message->target_status.status = static_cast<uint8_t>(feedback.status);
           goal_handle->publish_feedback(feedback_message);
           break;
         }
-        case franka::TargetStatus::kTargetReached: {
+        case PTPMotionHandler::TargetStatus::kTargetReached: {
           is_finished = true;
           break;
         }

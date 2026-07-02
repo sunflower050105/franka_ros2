@@ -1,7 +1,12 @@
 # controllers.yaml – franka_velocity_ctrl
 # ----------------------------------------
 # ros2_control parameter file for the Franka Research 3 (FR3) real hardware
-# using a JointGroupVelocityController.
+# using the JointVelocityExampleController (franka_example_controllers).
+#
+# This controller properly calls service_server/set_full_collision_behavior
+# during on_configure(), which is required to avoid the
+# "communication_constraints_violation" reflex that fires when a generic
+# velocity controller takes over without relaxing Franka's reflex thresholds.
 #
 # The /**  wildcard makes these parameters namespace-agnostic so the file
 # works with or without a ROS namespace prefix.
@@ -9,8 +14,17 @@
 /**:
   controller_manager:
     ros__parameters:
-      update_rate: 1000         # Hz – must match the Franka control-loop rate
+      update_rate: 1000        # Hz – must match the Franka hardware 1 kHz control-loop rate
       thread_priority: 98
+      # IMPORTANT: Disable overrun management so that when the non-realtime laptop
+      # scheduler causes the loop to take >1 ms, ros2_control does NOT deactivate
+      # the controller.  Deactivating the controller mid-run causes Franka firmware
+      # to receive no command for >1 ms which fires the communication_constraints_violation
+      # reflex.  The robot firmware itself tolerates a few missed cycles; keep the
+      # controller alive and let libfranka handle it gracefully.
+      overruns:
+        manage: false
+        print_warnings: false
 
       joint_state_broadcaster:
         type: joint_state_broadcaster/JointStateBroadcaster
@@ -20,8 +34,8 @@
         state_interfaces:
           robot_state
 
-      joint_velocity_controller:
-        type: velocity_controllers/JointGroupVelocityController
+      joint_velocity_example_controller:
+        type: franka_example_controllers/JointVelocityExampleController
 
 /**:
   franka_robot_state_broadcaster:
@@ -30,14 +44,16 @@
       convenience_publish_rate: 100   # Hz
 
 /**:
-  joint_velocity_controller:
+  joint_velocity_example_controller:
     ros__parameters:
-      joints:
-        - fr3_joint1
-        - fr3_joint2
-        - fr3_joint3
-        - fr3_joint4
-        - fr3_joint5
-        - fr3_joint6
-        - fr3_joint7
-      # interface_name: velocity   # default – uncomment to be explicit
+      arm_prefix: ""
+      gazebo: false
+      # Exponential low-pass filter coefficient α ∈ (0, 1].
+      # Applied each 1 kHz control cycle:  v_out += α * (v_target - v_out)
+      #
+      # Peak effective acceleration ≈ α * |Δv| / dt  (dt = 0.001 s at 1 kHz)
+      #   α = 0.02, |Δv| = 0.3 rad/s  →  ~6 rad/s²  (safe, FR3 limit ≈ 10 rad/s²)
+      #
+      # Smaller α  → smoother / slower response
+      # Larger  α  → faster response / less smoothing (risk of reflex if too large)
+      filter_coefficient: 0.02

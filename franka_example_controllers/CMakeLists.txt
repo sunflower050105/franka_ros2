@@ -28,6 +28,7 @@ find_package(rclcpp REQUIRED)
 find_package(rclcpp_action REQUIRED)
 find_package(rclcpp_lifecycle REQUIRED)
 find_package(realtime_tools REQUIRED)
+find_package(std_msgs REQUIRED)
 find_package(std_srvs REQUIRED)
 find_package(Eigen3 REQUIRED)
 
@@ -73,6 +74,7 @@ ament_target_dependencies(
         rclcpp
         rclcpp_lifecycle
         realtime_tools
+        std_msgs
         std_srvs
 )
 
@@ -198,5 +200,6 @@ ament_export_dependencies(
         rclcpp_lifecycle
         hardware_interface
         moveit_core
+        std_msgs
 )
 ament_package()

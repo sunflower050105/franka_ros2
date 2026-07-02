@@ -50,11 +50,15 @@ BANNER = """
 
 
 def _get_key(settings, timeout: float = 0.05) -> str:
-    """Non-blocking single-character read with timeout."""
-    tty.setraw(sys.stdin.fileno())
-    rlist, _, _ = select.select([sys.stdin], [], [], timeout)
-    key = sys.stdin.read(1) if rlist else ''
-    termios.tcsetattr(sys.stdin, termios.TCSADRAIN, settings)
+    import tty
+    fd = sys.stdin.fileno()
+    old_settings = termios.tcgetattr(fd)
+    try:
+        tty.setcbreak(fd)  # Changed from setraw to setcbreak
+        rlist, _, _ = select.select([sys.stdin], [], [], timeout)
+        key = sys.stdin.read(1) if rlist else ''
+    finally:
+        termios.tcsetattr(fd, termios.TCSADRAIN, old_settings)
     return key
 
 

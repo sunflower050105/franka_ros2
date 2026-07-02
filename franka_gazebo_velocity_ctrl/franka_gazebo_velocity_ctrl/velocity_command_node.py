@@ -17,12 +17,12 @@ class VelocityCommandNode(Node):
         # Example: sinusoidal motion on joint 4 and 5
         t = self.get_clock().now().seconds_nanoseconds()[0]
         vel = [
-            0.0,
+            0.5,
             0.0,
             0.0,
             0.3 * (abs((t % 4) - 2) - 1),   # oscillating joint 4
             0.2 * (abs(((t+1) % 4) - 2) - 1), # oscillating joint 5
-            0.0,
+            1.5,
             0.0
         ]
         msg.data = vel

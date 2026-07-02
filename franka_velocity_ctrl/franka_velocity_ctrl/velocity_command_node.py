@@ -4,12 +4,17 @@
 #
 # Franka Research 3 – Velocity Command Node
 # ------------------------------------------
-# Publishes joint velocity commands to the JointGroupVelocityController.
+# Publishes joint velocity commands to the JointVelocityExampleController.
+#
+# The controller used is franka_example_controllers/JointVelocityExampleController,
+# which automatically calls service_server/set_full_collision_behavior during
+# on_configure() to relax Franka's reflex thresholds.  This node therefore does
+# NOT need to call that service itself.
 #
 # Three operating modes (set via 'mode' parameter):
 #
-#   demo   – Sends a sine-wave profile on all 7 joints so you can verify
-#             the controller is working without writing any external code.
+#   demo   – Falls through to the built-in controller sine-wave demo (no
+#             commands are published, the controller drives the robot itself).
 #
 #   topic  – Forwards commands received on ~/target_velocities to the
 #             hardware controller.  Use this mode with keyboard_teleop_node
@@ -18,11 +23,11 @@
 #   zero   – Continuously publishes zero velocities (safe commissioning mode).
 #
 # Published topics:
-#   /joint_velocity_controller/commands   (std_msgs/Float64MultiArray)
-#   ~/target_velocities                   (std_msgs/Float64MultiArray) – echo
+#   /joint_velocity_example_controller/commands   (std_msgs/Float64MultiArray)
+#   ~/target_velocities                           (std_msgs/Float64MultiArray) – echo
 #
 # Subscribed topics (topic mode only):
-#   ~/target_velocities                   (std_msgs/Float64MultiArray)
+#   ~/target_velocities                           (std_msgs/Float64MultiArray)
 
 import math
 import time
@@ -43,10 +48,15 @@ _DEMO_PHASE_OFFSETS = [i * (2.0 * math.pi / NUM_JOINTS) for i in range(NUM_JOINT
 class VelocityCommandNode(Node):
     """Velocity command node for the Franka FR3.
 
+    Sends commands to the JointVelocityExampleController which handles
+    Franka-specific initialisation (collision-behavior service) internally.
+
     ROS 2 Parameters
     ----------------
     mode : str
         Operating mode: ``demo`` | ``topic`` | ``zero``.  Default: ``demo``.
+        In ``demo`` mode this node publishes nothing; the controller's built-in
+        sine-wave demo runs instead.
     max_velocity_scale : float
         Fraction of FR3 hardware joint-velocity limits used as the clamp
         boundary (0.0 – 1.0).  Default: ``0.1``.
@@ -59,7 +69,7 @@ class VelocityCommandNode(Node):
         Frequency of the sine-wave profile in demo mode [Hz].  Default: ``0.2``.
     command_topic : str
         Topic to publish hardware commands to.
-        Default: ``/joint_velocity_controller/commands``.
+        Default: ``/joint_velocity_example_controller/commands``.
     """
 
     def __init__(self):
@@ -72,7 +82,7 @@ class VelocityCommandNode(Node):
         self.declare_parameter('demo_amplitude', 0.1)
         self.declare_parameter('demo_frequency', 0.2)
         self.declare_parameter(
-            'command_topic', '/joint_velocity_controller/commands'
+            'command_topic', '/joint_velocity_example_controller/commands'
         )
 
         self._mode = (
@@ -130,6 +140,8 @@ class VelocityCommandNode(Node):
         )
 
         # ── Timer ─────────────────────────────────────────────────────────────
+        # In 'demo' mode the controller drives the robot itself via its
+        # sine-wave fallback; we still create the timer but publish nothing.
         self.create_timer(1.0 / rate_hz, self._publish_cb)
 
         self.get_logger().info(
@@ -140,12 +152,16 @@ class VelocityCommandNode(Node):
 
         if self._mode == 'demo':
             self.get_logger().info(
-                f'Demo mode: amplitude={self._demo_amp:.4f} rad/s | '
-                f'frequency={self._demo_freq:.2f} Hz'
+                'Demo mode: the JointVelocityExampleController runs its built-in '
+                'sine-wave profile.  No commands are published by this node.'
             )
         elif self._mode == 'topic':
             self.get_logger().info(
                 'Topic mode: publish to ~/target_velocities to command joints'
+            )
+        elif self._mode == 'zero':
+            self.get_logger().info(
+                'Zero mode: publishing zero velocities continuously.'
             )
 
     # ── Subscriber callback ───────────────────────────────────────────────────
@@ -173,6 +189,10 @@ class VelocityCommandNode(Node):
 
     def _publish_cb(self):
         """Compute and publish the velocity command at the configured rate."""
+        # In demo mode let the controller's built-in sine-wave handle motion.
+        if self._mode == 'demo':
+            return
+
         velocities = self._compute_velocities()
 
         cmd = Float64MultiArray()
@@ -189,17 +209,11 @@ class VelocityCommandNode(Node):
         """Return the velocity vector for the current mode."""
         if self._mode == 'zero':
             return [0.0] * NUM_JOINTS
-
         if self._mode == 'topic':
             return list(self._target_velocities)
 
-        # demo – sine wave
-        t = time.monotonic() - self._start_time
-        omega = 2.0 * math.pi * self._demo_freq
-        return [
-            self._demo_amp * math.sin(omega * t + phase)
-            for phase in _DEMO_PHASE_OFFSETS
-        ]
+        # demo – handled above (no-op)
+        return [0.0] * NUM_JOINTS
 
 
 def main(args=None):

@@ -29,25 +29,39 @@ from launch_ros.substitutions import FindPackageShare
 
 
 def spawn_controllers(context, *args, **kwargs):
-    """Spawn ros2_control controllers after the controller_manager is ready."""
+    """Spawn ros2_control controllers after the controller_manager is ready.
+
+    NOTE: joint_state_broadcaster is already spawned by franka.launch.py
+    internally, so we must NOT spawn it again here (duplicate spawning causes
+    a failure cascade when the hardware is active).  We only spawn the
+    franka_robot_state_broadcaster (which franka.launch.py skips because we
+    pass load_franka_robot_state_broadcaster:=false) and the velocity
+    controller.
+
+    We use joint_velocity_example_controller (franka_example_controllers) instead
+    of the generic JointGroupVelocityController because it automatically calls
+    service_server/set_full_collision_behavior during on_configure(), which is
+    required to relax Franka's reflex thresholds and avoid the
+    "communication_constraints_violation" error.
+    """
     return [
-        # Step 1 – broadcasters
+        # Step 1 – franka_robot_state_broadcaster only
+        # (joint_state_broadcaster is already activated by franka.launch.py)
         Node(
             package='controller_manager',
             executable='spawner',
             arguments=[
-                'joint_state_broadcaster',
                 'franka_robot_state_broadcaster',
                 '--controller-manager-timeout', '30',
             ],
             output='screen',
         ),
-        # Step 2 – velocity controller
+        # Step 2 – joint_velocity_example_controller
         Node(
             package='controller_manager',
             executable='spawner',
             arguments=[
-                'joint_velocity_controller',
+                'joint_velocity_example_controller',
                 '--controller-manager-timeout', '30',
             ],
             output='screen',
