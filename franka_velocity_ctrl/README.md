@@ -35,7 +35,7 @@ The stack is organized in three layers:
 ```
 ┌─────────────────────────────────────────────────────────────────┐
 │                      Your Application / Planner                  │
-│    (publishes Float64MultiArray to ~/target_velocities)          │
+│    (publishes Float64MultiArray to velocity_command_node/target_velocities)          │
 └───────────────────────────────┬─────────────────────────────────┘
                                 │  std_msgs/Float64MultiArray
                                 ▼
@@ -166,16 +166,6 @@ Set your PC's Ethernet interface to the same subnet, e.g.:
 IP address : 172.16.0.1
 Netmask    : 255.255.255.0
 Gateway    : (leave empty)
-```
-
-Using `nmcli` (recommended):
-
-```bash
-# Replace eth0 with your actual interface name (ip link show)
-sudo nmcli connection add type ethernet ifname eth0 \
-     ipv4.method manual ipv4.addresses 172.16.0.1/24 \
-     connection.id franka-direct
-sudo nmcli connection up franka-direct
 ```
 
 ### Step 3 – Verify connectivity
