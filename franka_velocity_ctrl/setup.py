@@ -26,6 +26,7 @@ setup(
         'console_scripts': [
             'velocity_command_node = franka_velocity_ctrl.velocity_command_node:main',
             'keyboard_teleop_node  = franka_velocity_ctrl.keyboard_teleop_node:main',
+            'example_joint_vel_node = franka_velocity_ctrl.example_joint_vel_node:main'
         ],
     },
 )
